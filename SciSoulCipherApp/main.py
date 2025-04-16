@@ -3,6 +3,7 @@ from EC.rsa_module import RSAApp
 from EC.rsa_numeric import RSANumericApp
 from EC.elgamal import ElGamalApp
 
+from DSS.rsa_dss import RSADSS
 from DSS.elgamal_dss import ElGamalDSS
 from DSS.schnorr_dsa import SchnorrDSA
 
@@ -33,7 +34,7 @@ class CryptoSelector:
         tk.Label(right_frame, text="Digital Singature Schemes", font=("Arial", 14)).pack(pady=10)
         
         self.options_2 = {
-            "RSA": None,
+            "RSA": self.launch_rsa_dss,
             "ElGamal": self.launch_elgamal_DSS,
             "SchnorrDSA": self.launch_schnorr_DSA
         }
@@ -52,6 +53,10 @@ class CryptoSelector:
     def launch_elgamal_app(self):
         self.root.withdraw()
         ElGamalApp(self.root)
+
+    def launch_rsa_dss(self):
+        self.root.withdraw()
+        RSADSS(self.root)
 
     def launch_elgamal_DSS(self):
         self.root.withdraw()

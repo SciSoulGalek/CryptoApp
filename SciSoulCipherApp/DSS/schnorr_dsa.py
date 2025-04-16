@@ -82,7 +82,7 @@ class SchnorrDSA:
 
     #Data saver and loader
     def save_dsa_data(self):
-        file_path = Path(__file__).parent / "schnorr_dsa_dss_data.json"
+        file_path = Path(__file__).parent / "schnorr_dsa_data.json"
         data = {
             "p": self.p_entry.get(),
             "g": self.g_entry.get(),
@@ -98,7 +98,7 @@ class SchnorrDSA:
 
     def load_dsa_data(self):
         try:
-            file_path = Path(__file__).parent / "schnorr_dsa_dss_data.json"
+            file_path = Path(__file__).parent / "schnorr_dsa_data.json"
             with file_path.open("r") as file:
                 data = json.load(file)
 
