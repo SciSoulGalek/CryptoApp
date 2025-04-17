@@ -1,9 +1,7 @@
 import tkinter as tk
-from tkinter import scrolledtext, messagebox
+from tkinter import scrolledtext, messagebox, ttk
 from pathlib import Path
-import json
-import random
-import math
+import json, math, random, hashlib
 
 class RSADSS:
     def __init__(self, selector_root):
@@ -23,7 +21,7 @@ class RSADSS:
 
         self.create_widgets()
         self.key_data = {}
-
+        
     def on_close(self):
         self.root.destroy()
         if self.selector_root:
@@ -39,24 +37,23 @@ class RSADSS:
         tk.Label(self.root, text="Enter p:").place(x=20, y=360)
         self.p_entry = tk.Entry(self.root, width=20)
         self.p_entry.insert(0, "61")
-        self.p_entry.place(x=120, y=360)
+        self.p_entry.place(x=80, y=360)
 
         tk.Label(self.root, text="Enter q:").place(x=20, y=390)
         self.q_entry = tk.Entry(self.root, width=20)
         self.q_entry.insert(0, "53")
-        self.q_entry.place(x=120, y=390)
+        self.q_entry.place(x=80, y=390)
 
         tk.Label(self.root, text="Enter e:").place(x=20, y=420)
         self.e_entry = tk.Entry(self.root, width=20)
         self.e_entry.insert(0, "17")
-        self.e_entry.place(x=120, y=420)
+        self.e_entry.place(x=80, y=420)
 
-        tk.Button(self.root, text="Generate Keys", command=self.generate_keys, bg="lightblue").place(x=498, y=360)
+        tk.Button(self.root, text="Generate Keys", command=self.generate_keys, bg="lightblue").place(x=498, y=420)
 
-        tk.Label(self.root, text="Enter n:").place(x=300, y=420)
+        tk.Label(self.root, text="Enter n:").place(x=280, y=420)
         self.n_entry = tk.Entry(self.root, width=20)
-        self.n_entry.insert(0, "17")
-        self.n_entry.place(x=390, y=420)
+        self.n_entry.place(x=340, y=420)
 
         tk.Label(self.root, text="Enter Message to Sign:").place(x=20, y=460)
         self.sign_entry = tk.Entry(self.root, width=63)
@@ -75,6 +72,16 @@ class RSADSS:
 
         self.load_button = tk.Button(self.root, text="Load", command=self.load_rsa_dss_data, bg="orange")
         self.load_button.place(x=545, y=590)
+
+        self.hash_label = tk.Label(self.root, text="Hash Algorithm:")
+        self.hash_label.place(x=230, y=360)
+        
+        self.hash_var = tk.StringVar()
+        self.hash_var.set("256")  # Default to SHA-256
+        
+        self.hash_dropdown = ttk.Combobox(self.root, textvariable=self.hash_var, values=["256", "384", "512"], state="readonly")
+        self.hash_dropdown.place(x=340, y=360)
+
 
     #Data saver and loader
     def save_rsa_dss_data(self):
@@ -155,7 +162,7 @@ class RSADSS:
             d = pow(e, -1, phi_n)
 
             self.public_key = (e, n)
-            self.key_data["p"], self.key_data["q"], self.key_data["e"], self.key_data["d"], self.key_data["n"] = p, q, e, d, n
+            self.key_data["p"], self.key_data["q"], self.key_data["e"], self.key_data["d"] = p, q, e, d
             self.log_panel.delete(1.0, tk.END)
             self.log_message(f"Keys Generated!\nPublic: (e={e}, n={n})\nPrivate: d = {d}", "blue")
             self.n_entry.delete(0, tk.END)
@@ -163,10 +170,24 @@ class RSADSS:
         except ValueError as ex:
             messagebox.showerror("Input Error", str(ex))
 
+    def sha2_hash(self, message: str) -> int:
+        hash_choice = self.hash_var.get()
+        message_bytes = message.encode()
+
+        if hash_choice == "256":
+            digest = hashlib.sha256(message_bytes).digest()
+        elif hash_choice == "384":
+            digest = hashlib.sha384(message_bytes).digest()
+        elif hash_choice == "512":
+            digest = hashlib.sha512(message_bytes).digest()
+        else:
+            raise ValueError("Unsupported SHA version")
+
+        return int.from_bytes(digest, byteorder='big')
 
     def sign_number(self):
         try:
-            d, n = self.key_data["d"], self.key_data["n"]
+            d, n = self.key_data["d"], int(self.n_entry.get())
             message = int(self.sign_entry.get())
             if message >= n:
                 raise ValueError("Message must be less than n.")
@@ -177,7 +198,6 @@ class RSADSS:
             self.signature_value = signature
 
             self.log_message(f"Signed: {message} → {signature}", "green")
-            self.sign_entry.delete(0, tk.END)
             self.verify_entry.delete(0, tk.END)
             self.verify_entry.insert(0, signature)
         except (KeyError, ValueError) as ex:
@@ -185,7 +205,7 @@ class RSADSS:
 
     def verify_number(self):
         try:
-            e, n = self.key_data["e"], self.key_data["n"]
+            e, n = int(self.e_entry.get()), int(self.n_entry.get())
             signature = int(self.verify_entry.get())
             message = int(self.sign_entry.get())
 
@@ -197,6 +217,5 @@ class RSADSS:
             else:
                 self.log_message("Signature Failed to Verify", "red")
 
-            self.verify_entry.delete(0, tk.END)
         except (KeyError, ValueError) as ex:
             self.log_message(f"Error: {str(ex)}", "red")

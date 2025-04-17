@@ -1,9 +1,7 @@
 import tkinter as tk
-from tkinter import scrolledtext, messagebox
+from tkinter import scrolledtext, messagebox, ttk
 from pathlib import Path
-import json
-import random
-import math
+import json, math, random, hashlib
 
 class ElGamalDSS:
     def __init__(self, selector_root):
@@ -40,24 +38,23 @@ class ElGamalDSS:
         tk.Label(self.root, text="Enter p:").place(x=20, y=360)
         self.p_entry = tk.Entry(self.root, width=20)
         self.p_entry.insert(0, "61")
-        self.p_entry.place(x=120, y=360)
+        self.p_entry.place(x=80, y=360)
 
         tk.Label(self.root, text="Enter g:").place(x=20, y=390)
         self.g_entry = tk.Entry(self.root, width=20)
         self.g_entry.insert(0, "53")
-        self.g_entry.place(x=120, y=390)
+        self.g_entry.place(x=80, y=390)
 
         tk.Label(self.root, text="Enter x:").place(x=20, y=420)
         self.x_entry = tk.Entry(self.root, width=20)
         self.x_entry.insert(0, "17")
-        self.x_entry.place(x=120, y=420)
+        self.x_entry.place(x=80, y=420)
 
-        tk.Button(self.root, text="Generate Keys", command=self.generate_keys, bg="lightblue").place(x=498, y=360)
+        tk.Button(self.root, text="Generate Keys", command=self.generate_keys, bg="lightblue").place(x=498, y=420)
 
-        tk.Label(self.root, text="Public Key:").place(x=300, y=420)
+        tk.Label(self.root, text="Public Key:").place(x=260, y=420)
         self.y_entry = tk.Entry(self.root, width=20)
-        self.y_entry.insert(0, "17")
-        self.y_entry.place(x=390, y=420)
+        self.y_entry.place(x=340, y=420)
 
         tk.Label(self.root, text="Enter Message to Sign:").place(x=20, y=460)
         self.sign_entry = tk.Entry(self.root, width=63)
@@ -78,6 +75,15 @@ class ElGamalDSS:
 
         self.load_button = tk.Button(self.root, text="Load", command=self.load_elgamal_data, bg="orange")
         self.load_button.place(x=545, y=590)
+
+        self.hash_label = tk.Label(self.root, text="Hash Algorithm:")
+        self.hash_label.place(x=230, y=360)
+        
+        self.hash_var = tk.StringVar()
+        self.hash_var.set("256")  # Default to SHA-256
+        
+        self.hash_dropdown = ttk.Combobox(self.root, textvariable=self.hash_var, values=["256", "384", "512"], state="readonly")
+        self.hash_dropdown.place(x=340, y=360)
 
     #Data saver and loader
     def save_elgamal_data(self):
@@ -210,6 +216,21 @@ class ElGamalDSS:
         except ValueError as ex:
             messagebox.showerror("Input Error", str(ex))
 
+    def sha2_hash(self, message: str) -> int:
+        hash_choice = self.hash_var.get()
+        message_bytes = message.encode()
+
+        if hash_choice == "256":
+            digest = hashlib.sha256(message_bytes).digest()
+        elif hash_choice == "384":
+            digest = hashlib.sha384(message_bytes).digest()
+        elif hash_choice == "512":
+            digest = hashlib.sha512(message_bytes).digest()
+        else:
+            raise ValueError("Unsupported SHA version")
+
+        return int.from_bytes(digest, byteorder='big')
+
     def sign_number(self):
         try:
             p, g, x, y = self.key_data["p"], self.key_data["g"], self.key_data["x"], self.key_data["y"]
@@ -227,7 +248,6 @@ class ElGamalDSS:
             self.signature_2_value = signature_2
             
             self.log_message(f"Signed: {message} → {signature_1}, {signature_2}", "green")
-            self.sign_entry.delete(0, tk.END)
             self.verify_1_entry.delete(0, tk.END)
             self.verify_2_entry.delete(0, tk.END)
             self.verify_1_entry.insert(0, int(signature_1))
@@ -252,9 +272,6 @@ class ElGamalDSS:
                 self.log_message(f"Verified: {signature_1}, {signature_2} → {message}", "orange")
             else:
                 self.log_message("Signature Failed to Verify", "red")
-
-            self.verify_1_entry.delete(0, tk.END)
-            self.verify_2_entry.delete(0, tk.END)
 
         except (KeyError, ValueError):
             self.log_message("Error: Generate keys first or check ciphertext format!", "red")
