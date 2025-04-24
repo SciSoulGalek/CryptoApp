@@ -234,13 +234,13 @@ class ElGamalDSS:
     def sign_number(self):
         try:
             p, g, x, y = self.key_data["p"], self.key_data["g"], self.key_data["x"], self.key_data["y"]
-            message = int(self.sign_entry.get())
+            message = self.sign_entry.get()
             k = self.generate_k()
 
-            self.message_value = message
+            hash_int = self.sha2_hash(message)
             
             signature_1 = pow(g, k, p)
-            step_1 = (message - x * signature_1) % (p - 1)
+            step_1 = (hash_int - x * signature_1) % (p - 1)
             k_inv = pow(k, -1, (p - 1))
             signature_2 = (step_1 * k_inv) % (p - 1)
 
@@ -262,9 +262,11 @@ class ElGamalDSS:
             signature_1 = int(self.verify_1_entry.get())
             signature_2 = int(self.verify_2_entry.get())
 
-            message = int(self.sign_entry.get())
+            message = self.sign_entry.get()
 
-            v_1 = pow(g, message, p)
+            hash_int = self.sha2_hash(message)
+
+            v_1 = pow(g, hash_int, p)
             v_2 = (pow(y, signature_1, p) * pow(signature_1, signature_2, p)) % p
             
             if v_1 == v_2:

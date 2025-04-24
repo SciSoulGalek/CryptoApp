@@ -129,12 +129,12 @@ class RSANumericApp:
             q = int(self.q_entry.get())
             e = int(self.e_entry.get())
 
-            if p <= 1 or q <= 1 or e <= 1:
-                raise ValueError("Numbers must be greater than 1.")
-            if p == q:
-                raise ValueError("p and q must be distinct primes.")
-            if not self.isprime(p) or not self.isprime(q):
-                raise ValueError("p and q must be prime numbers.")
+            # if p <= 1 or q <= 1 or e <= 1:
+            #     raise ValueError("Numbers must be greater than 1.")
+            # if p == q:
+            #     raise ValueError("p and q must be distinct primes.")
+            # if not self.isprime(p) or not self.isprime(q):
+            #     raise ValueError("p and q must be prime numbers.")
 
             n = p * q
             phi = (p - 1) * (q - 1)

@@ -220,13 +220,13 @@ class SchnorrDSA:
     def sign_number(self):
         try:
             p, g, x, y, q = self.key_data["p"], self.key_data["g"], self.key_data["x"], self.key_data["y"], self.key_data["q"]
-            message = int(self.sign_entry.get())
+            message = self.sign_entry.get().strip()
 
             k = random.randint(1, q - 1)
             
-            h = self.sha256_hash(message)
+            hash_int = self.sha256_hash(message)
             s_1 = pow(g, k, p) % q
-            s_2 = ((h + x * s_1) * pow(k, -1, q)) % q
+            s_2 = ((hash_int + x * s_1) * pow(k, -1, q)) % q
 
             self.message_value = message
             self.signature_1_value = s_1
@@ -246,10 +246,12 @@ class SchnorrDSA:
             p, g, x, y, q = self.key_data["p"], self.key_data["g"], self.key_data["x"], self.key_data["y"], self.key_data["q"]
             s_1 = int(self.verify_1_entry.get())
             s_2 = int(self.verify_2_entry.get())
-            message = int(self.sign_entry.get())
+            message = self.sign_entry.get().strip()
+
+            hash_int = self.sha2_hash(message) % q
 
             s_2_inv = pow(s_2, -1, q)
-            z1 = (self.sha256_hash(message) * s_2_inv) % q
+            z1 = (hash_int * s_2_inv) % q
             z2 = (s_1 * s_2_inv) % q
 
             v = (pow(g, z1, p) * pow(y, z2, p)) % p % q
